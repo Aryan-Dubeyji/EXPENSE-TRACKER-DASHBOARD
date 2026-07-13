@@ -1,4 +1,4 @@
-# Finlytic — Technical Documentation
+# Finlytic — Documentation
 
 ## 1. Project Objectives
 
@@ -15,51 +15,7 @@ Finlytic follows a **client-centric single-page architecture** built on TanStack
 
 The data layer is intentionally shaped like a REST client so it can be replaced by a real Node/Express + MongoDB backend without touching the UI.
 
-```text
-┌──────────────────────────────────────────────────────┐
-│                    Browser (SPA)                     │
-│  ┌────────────┐   ┌───────────────┐   ┌───────────┐  │
-│  │  Routes    │──▶│  Contexts     │──▶│  Store    │  │
-│  │  (pages)   │   │  (Auth, etc.) │   │  (CRUD)   │  │
-│  └────────────┘   └───────────────┘   └─────┬─────┘  │
-│                                             │        │
-│                                       ┌─────▼─────┐  │
-│                                       │localStorage│ │
-│                                       └───────────┘  │
-└──────────────────────────────────────────────────────┘
-```
-
-## 3. Folder Structure
-
-```
-src/
-  components/
-    ui/                  shadcn primitives
-    app-sidebar.tsx      Desktop sidebar + mobile bottom nav
-    stat-card.tsx        Dashboard KPI card
-    expense-dialog.tsx   Add/edit expense modal
-    income-dialog.tsx    Add/edit income modal
-  lib/
-    types.ts             Domain types + default categories
-    store.ts             Data layer (CRUD, auth, seed, export/import)
-    auth-context.tsx     React auth context
-    format.ts            Currency/date formatters, month helpers
-    utils.ts             cn() classname helper
-  routes/
-    __root.tsx           Root shell + providers + toaster
-    auth.tsx             Public auth page (login + register)
-    _app.tsx             Authenticated layout (sidebar + guard)
-    _app.index.tsx       /            Dashboard
-    _app.expenses.tsx    /expenses
-    _app.income.tsx      /income
-    _app.budgets.tsx     /budgets
-    _app.analytics.tsx   /analytics
-    _app.settings.tsx    /settings
-  styles.css             Tailwind v4 theme, tokens, gradients, shadows
-  router.tsx             Router factory (QueryClient in context)
-```
-
-## 4. Frontend Architecture
+## 3. Frontend Architecture
 
 The app uses TanStack Router's file-based routing. Every protected page lives under the pathless `_app` layout, which mounts the sidebar, checks the session, and redirects unauthenticated users to `/auth`. Public routes (currently just `/auth`) live at the top level.
 
@@ -70,45 +26,34 @@ State is intentionally minimal:
 - **Auth state** — `AuthContext` (session + login/register/logout)
 - **App data** — read through `useStoreSnapshot(selector)` which is a thin wrapper around `useSyncExternalStore` so any mutation via the store triggers re-render across every consumer.
 
-## 5. Backend Architecture (data layer)
+## 4. Backend Architecture
 
-`src/lib/store.ts` is the "backend". It exposes CRUD functions per entity and a simple pub-sub emitter so React can subscribe to changes. Passwords are hashed client-side using **SHA-256 with a fixed salt** via the Web Crypto API before being written to `localStorage`. Sessions are persisted under `et.session`.
+The application uses a dedicated **Node.js + Express.js** backend that exposes RESTful APIs consumed by the React frontend. Business logic is separated from the presentation layer, while **MongoDB** (via **Mongoose**) stores users, expenses, income, budgets, and categories. Authentication is handled using **JWT** with secure password hashing through **bcrypt**. The backend validates requests, performs CRUD operations, aggregates dashboard statistics, and returns JSON responses to the frontend. Environment variables are used for database connectivity, authentication secrets, and runtime configuration.
 
-To upgrade to a real backend:
+## 5. Database Schema (logical)
 
-1. Replace each `getX` / `saveX` / `deleteX` with a `fetch` to `/api/...`
-2. Move password hashing server-side (bcrypt) and use JWT for sessions
-3. Persist JWT in an httpOnly cookie
-4. Keep the UI unchanged
 
-## 6. Database Schema (logical)
-
-```ts
 User      { id, name, email, passwordHash, createdAt }
 Expense   { id, userId, title, amount, category, date, paymentMethod, notes, createdAt }
 Income    { id, userId, source, amount, category, date, notes, createdAt }
 Budget    { id, userId, category, monthlyLimit, createdAt }
 Category  { id, userId, name, kind: "expense" | "income" }
-```
 
 Relationships: `User 1—∞ Expense/Income/Budget/Category`. In a Mongo implementation each collection would be indexed on `userId`.
 
-## 7. Authentication Flow
+## 6. Authentication Flow
 
-```
 Register  → hash(pw) → users[] → session ← redirect to /
 Login     → hash(pw) → match user → session ← redirect to /
 _app      → guard checks session → allow or redirect to /auth
 Logout    → clear session
-```
 
 Password strength is enforced client-side (min 6 chars) and validated with Zod at every submission.
 
-## 8. REST-Style API Reference (logical)
+## 7. REST-Style API Reference (logical)
 
 The store surface mirrors a canonical REST API. If a Node/Express server is bolted on, endpoints would be:
 
-```
 POST   /api/auth/register    → { name, email, password }
 POST   /api/auth/login       → { email, password }
 GET    /api/auth/profile
@@ -129,9 +74,9 @@ POST   /api/budgets
 DELETE /api/budgets/:id
 
 GET    /api/dashboard        → aggregated stats for the current user
-```
 
-## 9. State Management
+
+## 8. State Management
 
 - **Auth** — React context, updated after login/register/logout
 - **Domain data** — `useStoreSnapshot` (built on `useSyncExternalStore`) subscribing to a lightweight emitter fired by every write in `store.ts`
@@ -139,20 +84,6 @@ GET    /api/dashboard        → aggregated stats for the current user
 
 TanStack Query is available in the stack but not required for the localStorage build; it becomes valuable the moment a real API is introduced.
 
-## 10. Component Hierarchy
-
-```
-__root
- └─ AuthProvider
-     ├─ /auth               → AuthPage
-     └─ _app  (guarded)     → AppSidebar + MobileNav + <Outlet />
-         ├─ index           → Dashboard
-         ├─ expenses        → Filters + Table + ExpenseDialog
-         ├─ income          → Filters + List + IncomeDialog
-         ├─ budgets         → BudgetCards + Create modal
-         ├─ analytics       → 4 Recharts panels
-         └─ settings        → Profile, appearance, password, data
-```
 
 ## 11. Data Flow
 
@@ -181,7 +112,7 @@ For a localStorage build:
 - No `dangerouslySetInnerHTML` anywhere
 - CSV export escapes double quotes
 
-Production-grade upgrades (documented for later): bcrypt on the server, JWT in httpOnly cookies, CSRF, rate-limiting, RLS in the database.
+The backend implements secure authentication with bcrypt password hashing, JWT-based authorization, request validation, and structured REST endpoints. Standard production practices such as environment-based secrets and scalable database architecture are followed.
 
 ## 15. Responsive Design
 
@@ -212,7 +143,6 @@ Production-grade upgrades (documented for later): bcrypt on the server, JWT in h
 
 ## 18. Future Enhancements
 
-- Node.js + Express + MongoDB (or Prisma + PostgreSQL) backend with JWT auth
 - Recurring transactions
 - Multi-currency with live FX rates
 - Bank-CSV import parser
