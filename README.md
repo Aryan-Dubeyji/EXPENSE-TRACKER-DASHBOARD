@@ -9,7 +9,7 @@ A modern, production-quality personal finance dashboard built as a full-stack si
 
 ## Overview
 
-Finlytic is an expense management application that lets users manage their day-to-day money — income, expenses, budgets, savings, and analytics — from a single beautifully designed dashboard. This build is a **frontend-only edition**: all data lives in the browser (localStorage) with hashed-password authentication, so the app is fully functional as a demo without any backend to run.
+Finlytic is an expense management application that lets users manage their day-to-day money — income, expenses, budgets, savings, and analytics — from a single beautifully designed dashboard.
 
 ## Key Features
 
@@ -29,7 +29,7 @@ Finlytic is an expense management application that lets users manage their day-t
 
 **Frontend:** React 19, TypeScript, Vite 7, TanStack Start (routing/SSR), Tailwind CSS v4, shadcn/ui, Recharts, React Hook Form + Zod, Sonner toasts, Lucide icons.
 
-**"Backend":** In-browser data layer (localStorage) with a typed store API — `src/lib/store.ts` — that mirrors REST-style CRUD operations and can be swapped for a real Node/Express + MongoDB backend by replacing the store implementation.
+**Backend:** Node.js, Express.js, MongoDB, Mongoose, JWT Authentication, REST API architecture, bcrypt password hashing, and environment-based configuration. The backend exposes RESTful APIs for authentication, expenses, income, budgets, dashboard analytics, and user management. The React frontend communicates with the backend through API endpoints, while MongoDB persists all application data and JWT-based authentication secures user sessions.
 
 ## Installation
 
@@ -42,7 +42,7 @@ The app is served on `http://localhost:8080`.
 
 ## Environment Variables
 
-None required for the frontend-only build.
+Typical backend configuration includes `MONGODB_URI`, `JWT_SECRET`, `PORT`, and other environment variables required for secure database connectivity and authentication.
 
 ## Scripts
 
@@ -67,7 +67,6 @@ The store module exposes CRUD-style functions that a real REST client would repl
 
 ## Future Improvements
 
-- Real backend (Node + Express + MongoDB/Prisma) with JWT auth
 - Multi-currency conversion & foreign exchange support
 - Recurring transactions & subscription tracking
 - Bank/CSV auto-import with parsing
