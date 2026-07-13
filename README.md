@@ -1,4 +1,9 @@
-# Finlytic — Expense Tracker Dashboard
+# NAME- ARYAN DUBEY
+# INTER ID- CITS2373
+# NO. OF WEEKS- 6
+# Project Name: Finlytic — Expense Tracker Dashboard
+
+# Project Scope
 
 A modern, production-quality personal finance dashboard built as a full-stack single-page application. Track expenses, income, budgets, and financial health with a premium fintech-inspired interface.
 
